@@ -12,22 +12,32 @@ start:
     ; Read boot drive from BIOS
     mov [BOOT_DRIVE], dl 
 
+    ; Enable Text Mode 
+    mov ah, 0x00
+    mov al, 0x03
+    int 0x10
+
     ; Init Segment Registers
     xor ax, ax
     mov ds, ax
     mov es, ax
-    mov ss, ax
-  
-    ; Set up the stack
-    mov ax, 0x9000
-    mov ss, ax                  ; Set stack segment to 0x9000
-    mov sp, 0xFFFF              ; Set stack pointer to the top of the stack
 
     ; Load the kernel from disk to 0x1000:0000
     call load_kernel
 
+    ; Set up the stack
+    mov ax, 0x1000
+    mov ss, ax                  ; Set stack segment to 0x1000
+    mov sp, 0xFFFF              ; Set stack pointer to the top of the stack
+    
+    ; mov ax, 0x1000              ; Set data segment to the same as kernel segment
+    ; mov ds, ax
+    ; mov es, ax
+
     ; Call kernel_main
     jmp 0x1000:0000             ; Jump to the kernel entry point
+    mov al, "K"
+    call load_failed
 
 load_kernel:
     ; Load the kernel from disk to 0x1000:0000
@@ -37,7 +47,7 @@ load_kernel:
                                 ; Destination ES:BX 0x1000 0000
 
     mov ah, 0x02                ; read sectors
-    mov al, 4                   ; read 4 sectors
+    mov al, 8                   ; read 8 sectors
     mov ch, 0                   ; cylinder  0
     mov cl, 2                   ; sector    2 (first sector after boot sector)
     mov dh, 0                   ; head      0

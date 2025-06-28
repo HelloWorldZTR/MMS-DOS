@@ -3,6 +3,7 @@
 *.com
 *.bin
 *.img
+*.elf
 
 # OS generated poop
 .DS_Store
