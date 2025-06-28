@@ -24,6 +24,7 @@ static void write_to_buf(unsigned int pos, char c, Color fg, Color bg) {
         : "ax", "di", "es"
     );
 }
+
 static char read_from_buf(unsigned int pos) {
     uint16_t value;
     __asm__ volatile (
@@ -55,12 +56,13 @@ void newline() {
     }
 }
 
-
+// Set foreground and background color
 void setcolor(Color foreground, Color background) {
     fg = foreground;
     bg = background;
 }
 
+// Clear the screen buffer to bg color
 void clear() {
     for (int i = 0; i < ROWNUM * COLNUM; i++) {
         // video_memory[i] = translate(' ', bg, bg);
@@ -70,6 +72,7 @@ void clear() {
     col = 0;
 }
 
+// Print a character to screen buffer
 void putchar(const char c) {
     if (c == '\n') {
         newline();
@@ -83,9 +86,82 @@ void putchar(const char c) {
     col++; // Row increment will be taken care of in the next function call
 }
 
-
+// Print a char* to screen buffer
 void puts(const char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         putchar(str[i]);
     }
+}
+
+// Simple printf that supports %s, %c, and %d %x
+void printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    while(*format) {
+        if (*format == '%') {
+            if(*(format+1) == 's') { // %s for string
+                const char *str = va_arg(args, const char*);
+                puts(str);
+            }
+            else if (*(format+1) == 'c') { // %c for character
+                const char c = va_arg(args, char);
+                putchar(c);
+            }
+            else if(*(format+1) == 'd') { // %d for decimal
+                char buffer[12];
+                int num = va_arg(args, int);
+                puts(itoa(num, buffer, 10));
+            }
+            else if(*(format+1) == 'x') { // %x for hexadecimal
+                char buffer[12];
+                int num = va_arg(args, int);
+                puts(itoa(num, buffer, 16));
+            }
+            else if (*(format+1) == '%') { // %%
+                putchar('%');
+            }
+            else { // Unknown format specifier, just print it as is
+                putchar('%');
+            }
+            format ++;
+            if(! *format) return;
+            format ++;
+        }
+        else {
+            putchar(*format);
+            format ++;
+        }
+    }
+}
+
+char* itoa(int num, char *buf, int base) {
+    if(base < 2 || base > 36) {
+        *buf = '\0'; // Invalid base
+        return buf;
+    }
+    char conv[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char *ptr = buf;
+    bool is_negative = num < 0;
+ 
+    if (is_negative && base == 10) {
+        *ptr++ = '-';
+        num = -num; // Make num positive for conversion
+    }
+    while(num) {
+        *ptr++ = conv[num % base];
+        num /= base;
+    }
+    *ptr = '\0';
+
+    // Reverse the string
+    char *start = buf + is_negative;
+    char *end = ptr - 1;
+    for(;start < end; start++, end--) {
+        char temp = *start;
+        *start = *end;
+        *end = temp;
+    }
+
+    return buf;
 }

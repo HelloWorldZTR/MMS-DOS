@@ -8,3 +8,6 @@
 # OS generated poop
 .DS_Store
 Thumbs.db
+
+# log
+*.log

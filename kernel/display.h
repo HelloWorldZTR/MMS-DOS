@@ -33,4 +33,6 @@ void setcolor(Color, Color);
 void clear();
 void putchar(const char);
 void puts(const char *);
+void printf(const char *format, ...);
+char* itoa(int num, char *str, int base);
 
