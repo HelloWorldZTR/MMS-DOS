@@ -13,30 +13,42 @@ uint16_t translate(const char c, Color fg, Color bg) {
 
 static void write_to_buf(unsigned int pos, char c, Color fg, Color bg) {
     uint16_t value = translate(c, fg, bg);
-    __asm__ volatile (
+    asm volatile (
         "movw $0xB800, %%ax\n"
         "movw %%ax, %%es\n"
-        "movw %1, %%di\n"
-        "movw %0, %%ax\n"
+        "movw %[offset], %%di\n"
+        "movw %[val], %%ax\n"
         "movw %%ax, %%es:(%%di)\n"
         :
-        : "r"(value), "r"(pos * 2)
+        : [val]"r"(value), [offset]"r"(pos * 2)
         : "ax", "di", "es"
     );
 }
 
 static char read_from_buf(unsigned int pos) {
     uint16_t value;
-    __asm__ volatile (
-        "movw $0xB800, %%ax\n"
-        "movw %%ax, %%es\n"
-        "movw %1, %%di\n"
-        "movw %%es:(%%di), %%ax\n"
-        : "=a"(value)
-        : "r"(pos * 2)
-        : "di", "es"
+    uint16_t offset = pos * 2;
+    asm volatile (
+        "movw $0xB800, %%ax\n\t"
+        "movw %%ax, %%es\n\t"
+        "movw %[offset], %%di\n\t"
+        "movw %%es:(%%di), %%ax\n\t"
+        "movw %%ax, %[val]\n\t"
+        : [val] "=rm"(value)
+        : [offset] "r"(offset)
+        : "ax", "di", "es"
     );
     return (char)(value & 0xFF);
+}
+
+void test() {
+    write_to_buf(0, 'M', fg, bg);
+    char c = read_from_buf(0);
+    if (c != 'M') {
+        printf("Test failed: expected 'M' at 0x0, got '%c'\n", c);
+    } else {
+        printf("Video Memory Test passed!\n");
+    }
 }
 
 void newline() {
