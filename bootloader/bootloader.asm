@@ -3,7 +3,11 @@
 org 0x7C00 
 [bits 16]
 
+section .data
+    BOOT_DRIVE: db 0
 
+
+section .text
 start:
     ; Read boot drive from BIOS
     mov [BOOT_DRIVE], dl 
@@ -13,9 +17,20 @@ start:
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov sp, 0x7C00              ; Set stack pointer to the end of the boot sector
+  
+    ; Set up the stack
+    mov ax, 0x9000
+    mov ss, ax                  ; Set stack segment to 0x9000
+    mov sp, 0xFFFF              ; Set stack pointer to the top of the stack
 
-    ; Load the kernel at 0x1000
+    ; Load the kernel from disk to 0x1000:0000
+    call load_kernel
+
+    ; Call kernel_main
+    jmp 0x1000:0000             ; Jump to the kernel entry point
+
+load_kernel:
+    ; Load the kernel from disk to 0x1000:0000
     mov ax, 0x1000              ; Load the kernel segment address
     mov es, ax
     xor bx, bx                  ; Set BX to 0 (offset) 
@@ -32,12 +47,7 @@ start:
     mov al, "D"                 ; Disk Error
     jc load_failed
 
-
-
-    ; Call kernel_main
-    jmp 0x1000:0000              ; Jump to the kernel entry point
-
-BOOT_DRIVE: db 0
+    ret
 
 load_failed:
     mov ax, 0x0E
