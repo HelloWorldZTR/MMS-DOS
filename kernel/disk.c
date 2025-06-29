@@ -1,10 +1,10 @@
 #include "disk.h"
 
-bool read_sector(far_pointer dest, size_t disknum, size_t tracknum, size_t sectornum, size_t headnum, size_t n) {
+bool read_sector(far_pointer dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum, size_t n) {
     uint16_t seg = dest.segment;
     uint16_t off = dest.offset;
     bool fail = false;
-    uint16_t tracsec = tracknum << 8 | sectornum;
+    uint16_t cylsec = cylindernum << 8 | sectornum;
     uint16_t headdisk = headnum << 8 | disknum;
     asm volatile (
         "movw %%ax, %%es\n"
@@ -18,7 +18,7 @@ bool read_sector(far_pointer dest, size_t disknum, size_t tracknum, size_t secto
         "movw $1, %[fail]\n"
         "2:\n"
         : [fail] "=r"(fail)
-        : "a"(seg), "b"(off), "c"(tracsec), "d"(headdisk)
+        : "a"(seg), "b"(off), "c"(cylsec), "d"(headdisk)
         :
     );
     return fail;

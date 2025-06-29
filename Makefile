@@ -22,24 +22,24 @@ entry.o: kernel/entry.S
 	$(AS) -c kernel/entry.S -o kernel/entry.o
 
 # Link the kernel object files
-kernel.bin: $(KERNEL_OBJ_FILES) entry.o
+KERNEL.COM: $(KERNEL_OBJ_FILES) entry.o
 	$(LD) $(LDFLAGS) -o kernel/kernel.elf kernel/entry.o $(KERNEL_LINK_ORDER)
-	objcopy -O binary kernel/kernel.elf kernel/kernel.bin
+	objcopy -O binary kernel/kernel.elf kernel/KERNEL.COM
 
 # Piece together the system image
-system.img: bootloader.bin kernel.bin
+system.img: bootloader.bin KERNEL.COM
 	dd if=/dev/zero of=system.img bs=512 count=2880
-	mkfs.fat -F 12 -R 9 system.img
+	mkfs.fat -F 12 -R 1 system.img
 	dd if=bootloader/bootloader.bin of=system.img conv=notrunc
-	dd if=kernel/kernel.bin of=system.img bs=512 seek=1 conv=notrunc
 	mkdir -p /mnt/tmp
 	mount -o loop system.img /mnt/tmp
+	cp kernel/KERNEL.COM /mnt/tmp/
 	cp -R fs/* /mnt/tmp/
 	umount /mnt/tmp
 	rm -rf /mnt/tmp
 
 clean:
-	rm -f kernel/*.o kernel/kernel.bin bootloader/bootloader.bin system.img kernel/kernel.elf
+	rm -f kernel/*.o kernel/KERNEL.COM bootloader/bootloader.bin system.img kernel/kernel.elf
 
 run: system.img
 	qemu-system-i386 -fda system.img -display curses -monitor stdio

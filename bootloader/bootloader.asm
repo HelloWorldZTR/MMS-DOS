@@ -9,7 +9,7 @@ header:
     BS_OEMName     db "MCROSOFT"
     BPB_BytsPerSec dw 512
     BPB_SecPerClus db 1
-    BPB_RsvdSecCnt dw 9 ; 1 Boot + 8 Kernel
+    BPB_RsvdSecCnt dw 1 ; 1 Boot
     BPB_NumFATs    db 2
     BPB_RootEntCnt dw 224
     BPB_TotSec16   dw 2880
@@ -59,6 +59,7 @@ start:
 
 load_kernel:
     ; Load the kernel from disk to 0x1000:0000
+    ; the kernel is located at Cylinder 0, Head 1, Sector 17
     mov ax, 0x1000              ; Load the kernel segment address
     mov es, ax
     xor bx, bx                  ; Set BX to 0 (offset) 
@@ -67,8 +68,8 @@ load_kernel:
     mov ah, 0x02                ; read sectors
     mov al, 8                   ; read 8 sectors
     mov ch, 0                   ; cylinder  0
-    mov cl, 2                   ; sector    2 (first sector after boot sector)
-    mov dh, 0                   ; head      0
+    mov cl, 17                  ; sector    17
+    mov dh, 1                   ; head      1
     mov dl, [BOOT_DRIVE]        ; drive     BOOT_DRIVE
 
     int 0x13

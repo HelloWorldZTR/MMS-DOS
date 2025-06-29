@@ -100,3 +100,11 @@ void heap_write_byte(uint16_t offset, uint8_t value) {
         : "ax", "di"
     );
 }
+
+void heap2memcpy(uint8_t *dest, far_pointer src, size_t n) {
+
+    for (size_t i = 0; i < n; i++) {
+        dest[i] = far_pointer_read(src);
+        src.offset++;
+    }
+}

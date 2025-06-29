@@ -177,11 +177,12 @@ char* itoa(int num, char *buf, int base) {
     }
 
     if (num == 0) {
-        *ptr++ = '0'; // Handle zero case
+        *ptr = '0'; // Handle zero case
+        ptr++;
         *ptr = '\0';
         return buf;
     }
-    
+
     while(num) {
         *ptr++ = conv[num % base];
         num /= base;

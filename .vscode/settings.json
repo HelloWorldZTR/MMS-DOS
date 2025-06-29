@@ -61,6 +61,7 @@
     "*.wxss": "css",
     "*.wxs": "javascript",
     "type.h": "c",
-    "display.h": "c"
+    "display.h": "c",
+    "lib.h": "c"
   }
 }

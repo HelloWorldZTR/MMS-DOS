@@ -16,3 +16,4 @@ uint16_t heap_read(uint16_t offset);
 uint8_t heap_read_byte(uint16_t offset);
 void heap_write(uint16_t offset, uint16_t val);
 void heap_write_byte(uint16_t offset, uint8_t value);
+void heap2memcpy(uint8_t *dest, far_pointer src, size_t n);
