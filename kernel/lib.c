@@ -35,7 +35,7 @@ uint16_t far_pointer_read(far_pointer p) {
         "movw %%ds:(%%di), %%ax\n"
         "movw %%ax, %[ret]\n"
         "pop %%ds\n"
-        : [ret] "=rm"(ret)
+        : [ret] "=r"(ret)
         : [seg] "r"(seg), [off] "r"(off)
         : "ax", "di", "ds"
     );
@@ -71,7 +71,32 @@ uint16_t heap_read(uint16_t offset) {
     return far_pointer_read(p);
 }
 
+uint8_t heap_read_byte(uint16_t offset) {
+    far_pointer p = heap_pointer(offset);
+    uint8_t value;
+    value = far_pointer_read(p) & 0xFF; // Read only the lower byte
+    return value;
+}
+
 void heap_write(uint16_t offset, uint16_t value) {
     far_pointer p = heap_pointer(offset);
     far_pointer_write(p, value);
+}
+
+void heap_write_byte(uint16_t offset, uint8_t value) {
+    far_pointer p = heap_pointer(offset);
+    uint16_t seg = p.segment;
+    uint16_t off = p.offset;
+    asm volatile (
+        "push %%ds\n"
+        "movw %[seg], %%ax\n"
+        "movw %%ax, %%ds\n"
+        "movw %[off], %%di\n"
+        "movb %[val], %%bl\n"
+        "movb %%bl, %%ds:(%%di)\n"
+        "pop %%ds\n"
+        :
+        : [seg] "r"(seg), [off] "r"(off), [val] "r"(value)
+        : "ax", "di"
+    );
 }
