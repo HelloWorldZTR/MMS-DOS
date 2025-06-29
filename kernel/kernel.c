@@ -2,6 +2,7 @@
 #include "type.h"
 #include "display.h"
 #include "keyboard.h"
+#include "lib.h"
 
 void print_banner() {
     for (int i = 0; i < 30; i++) putchar('=');
@@ -14,6 +15,12 @@ void print_banner() {
 void kernel_main() {
     setcolor(WHITE, BLACK); // Set foreground and background colors
     print_banner();
+
+    puts("Attempt to write to 0x90000...\n");
+    far_pointer fp = {0x9000, 0x0000};
+    far_pointer_write(fp, 'M');
+    printf("Far ptr (0x90000) is %c\n", far_pointer_read(fp));
+    printf("Heap address 0x0 is %c\n", heap_read(0));
 
     char cmd[100];
     while(1) {

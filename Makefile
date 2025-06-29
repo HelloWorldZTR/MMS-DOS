@@ -8,7 +8,7 @@ KERNEL_C_FILES = $(shell find kernel -name '*.c')
 KERNEL_OBJ_FILES = $(KERNEL_C_FILES:.c=.o)
 KERNEL_LINK_ORDER := kernel/kernel.o $(filter-out kernel/kernel.o, $(KERNEL_OBJ_FILES))  # main function first
 
-all: bootloader.bin kernel.bin system.img
+all: system.img
 
 # Compile all C files
 kernel/%.o: kernel/%.c
@@ -32,6 +32,11 @@ system.img: bootloader.bin kernel.bin
 	mkfs.fat -F 12 -R 9 system.img
 	dd if=bootloader/bootloader.bin of=system.img conv=notrunc
 	dd if=kernel/kernel.bin of=system.img bs=512 seek=1 conv=notrunc
+	mkdir -p /mnt/tmp
+	mount -o loop system.img /mnt/tmp
+	cp -R fs/* /mnt/tmp/
+	umount /mnt/tmp
+	rm -rf /mnt/tmp
 
 clean:
 	rm -f kernel/*.o kernel/kernel.bin bootloader/bootloader.bin system.img kernel/kernel.elf

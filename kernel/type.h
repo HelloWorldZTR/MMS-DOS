@@ -16,3 +16,9 @@
 #define va_arg(ap, type) (* ((type*)((ap += sizeof(type)) - sizeof(type))))
 #define va_end(ap) (ap = NULL)
 
+typedef struct {
+    uint16_t segment;
+    uint16_t offset;
+} far_pointer;
+
+
