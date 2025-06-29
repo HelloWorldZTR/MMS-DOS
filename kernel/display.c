@@ -86,11 +86,15 @@ void clear() {
 
 // Print a character to screen buffer
 void putchar(const char c) {
+    if (c == '\t') {
+        col += 4; // Row increment will be taken care of in the next function call
+        return;
+    }
     if (c == '\n') {
         newline();
         return;
     } 
-    else if (col == COLNUM) {
+    else if (col >= COLNUM) {
         newline();
     }
     // video_memory[row*COLNUM + col] = translate(c, fg, bg);
@@ -103,6 +107,17 @@ void puts(const char *str) {
     for (int i = 0; str[i] != '\0'; i++) {
         putchar(str[i]);
     }
+}
+
+//Print a rainbow colored char*
+void puts_fancy(const char *str) {
+    Color bak = fg;
+    for (int i = 0; str[i] != '\0'; i++) {
+        Color t = i % 14 + 1; //1-14 
+        setcolor(t, bg);
+        putchar(str[i]);
+    }
+    setcolor(bak, bg);
 }
 
 // Simple printf that supports %s, %c, and %d %x
