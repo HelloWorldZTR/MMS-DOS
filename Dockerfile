@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:jammy
+FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -20,6 +20,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 		software-properties-common \
 	&& apt-get autoremove -y --purge && rm -rf /var/cache/apt
 RUN apt install -y build-essential \
-    nasm
+    nasm\
+	dosfstools
 # 工作目录
 WORKDIR /src

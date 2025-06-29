@@ -1,9 +1,31 @@
 ; bootloader.asm
 
-org 0x7C00 
 [bits 16]
 
-section .data
+header:
+    jmp start
+    nop
+
+    BS_OEMName     db "MCROSOFT"
+    BPB_BytsPerSec dw 512
+    BPB_SecPerClus db 1
+    BPB_RsvdSecCnt dw 9 ; 1 Boot + 8 Kernel
+    BPB_NumFATs    db 2
+    BPB_RootEntCnt dw 224
+    BPB_TotSec16   dw 2880
+    BPB_Media      db 0xF0
+    BPB_FATSz16    dw 9
+    BPB_SecPerTrk  dw 18
+    BPB_NumHeads   dw 2
+    BPB_HiddSec    dd 0
+    BPB_TotSec32   dd 0
+    BS_DrvNum      db 0
+    BS_Reserved1   db 0
+    BS_BootSig     db 0x29
+    BS_VolID       dd 0
+    BS_VolLab      db "MSS-DOS 0.1"
+    BS_FileSysType db "FAT12   "
+
     BOOT_DRIVE: db 0
 
 
@@ -29,10 +51,6 @@ start:
     mov ax, 0x1000
     mov ss, ax                  ; Set stack segment to 0x1000
     mov sp, 0xFFFF              ; Set stack pointer to the top of the stack
-    
-    ; mov ax, 0x1000              ; Set data segment to the same as kernel segment
-    ; mov ds, ax
-    ; mov es, ax
 
     ; Call kernel_main
     jmp 0x1000:0000             ; Jump to the kernel entry point
@@ -63,6 +81,7 @@ load_failed:
     mov ax, 0x0E
     int 0x10                    ; BIOS interrupt to print character in al
     hlt
+
 
 
 times 510 - ($ - $$) db 0       ; Fill the rest of the boot sector to 512 bytes

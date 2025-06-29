@@ -29,6 +29,7 @@ kernel.bin: $(KERNEL_OBJ_FILES) entry.o
 # Piece together the system image
 system.img: bootloader.bin kernel.bin
 	dd if=/dev/zero of=system.img bs=512 count=2880
+	mkfs.fat -F 12 -R 9 system.img
 	dd if=bootloader/bootloader.bin of=system.img conv=notrunc
 	dd if=kernel/kernel.bin of=system.img bs=512 seek=1 conv=notrunc
 
