@@ -169,12 +169,19 @@ char* itoa(int num, char *buf, int base) {
     }
     char conv[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     char *ptr = buf;
-    bool is_negative = num < 0;
+    bool is_negative = num < 0 && base == 10;
  
     if (is_negative && base == 10) {
         *ptr++ = '-';
         num = -num; // Make num positive for conversion
     }
+
+    if (num == 0) {
+        *ptr++ = '0'; // Handle zero case
+        *ptr = '\0';
+        return buf;
+    }
+    
     while(num) {
         *ptr++ = conv[num % base];
         num /= base;
