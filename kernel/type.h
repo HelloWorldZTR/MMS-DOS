@@ -4,7 +4,7 @@
 #define NULL ((void*)0)
 #define uint8_t unsigned char
 #define uint16_t unsigned short
-#define uint32_t unsigned int
+#define uint32_t unsigned long
 #define size_t unsigned int
 #define bool int
 #define true 1
@@ -19,6 +19,7 @@
 typedef struct {
     uint16_t segment;
     uint16_t offset;
-} far_pointer;
+} far_ptr;
 
+typedef uint8_t* near_ptr;
 

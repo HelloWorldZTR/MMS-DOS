@@ -37,7 +37,7 @@ typedef struct _rootentry
 {
 	uint8_t DIR_Name[11];
 	uint8_t DIR_Attr;
-	uint8_t reserve[12];
+	uint8_t reserve[10];
 	uint16_t DIR_WrtTime;
 	uint16_t DIR_WrtDate;
 	uint16_t DIR_FstClus;
@@ -45,4 +45,4 @@ typedef struct _rootentry
 }rootentry;
 #pragma pack(pop)
 
-bool read_sector(far_pointer dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum, size_t n);
+bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum, size_t n);

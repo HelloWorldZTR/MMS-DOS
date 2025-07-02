@@ -1,6 +1,6 @@
 #include "disk.h"
 
-bool read_sector(far_pointer dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum, size_t n) {
+bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum, size_t n) {
     uint16_t seg = dest.segment;
     uint16_t off = dest.offset;
     bool fail = false;
