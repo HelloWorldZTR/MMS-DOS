@@ -4,6 +4,7 @@
 *.bin
 *.img
 *.elf
+*.sys
 
 # OS generated poop
 .DS_Store
