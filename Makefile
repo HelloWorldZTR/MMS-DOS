@@ -3,10 +3,9 @@ LD=ia16-elf-ld
 AS=ia16-elf-as
 
 CFLAGS=-O0 -ffreestanding -fno-pic -Wall -Wextra -nostdlib
-LDFLAGS=-m elf_i386_msdos_mz -T linker.ld -nostdlib
+LDFLAGS=-m elf_i386 -T linker.ld -nostdlib
 KERNEL_C_FILES = $(shell find kernel -name '*.c')
 KERNEL_OBJ_FILES = $(KERNEL_C_FILES:.c=.o)
-KERNEL_LINK_ORDER := kernel/kernel.o $(filter-out kernel/kernel.o, $(KERNEL_OBJ_FILES))  # main function first
 
 all: system.img
 
@@ -23,8 +22,7 @@ entry.o: kernel/entry.S
 
 # Link the kernel object files
 KERNEL.COM: $(KERNEL_OBJ_FILES) entry.o
-	$(LD) $(LDFLAGS) -o kernel/kernel.elf kernel/entry.o $(KERNEL_LINK_ORDER)
-	objcopy -O binary kernel/kernel.elf kernel/KERNEL.COM
+	$(LD) $(LDFLAGS) -o kernel/kernel.COM kernel/entry.o $(KERNEL_OBJ_FILES)
 
 # Piece together the system image
 system.img: bootloader.bin KERNEL.COM
