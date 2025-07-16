@@ -45,4 +45,10 @@ typedef struct _rootentry
 }rootentry;
 #pragma pack(pop)
 
-bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum, size_t n);
+fat12header fat_header;
+far_ptr root_entry_ptr;
+far_ptr fat_table_ptr;
+
+bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum);
+bool read_fat_header(size_t disknum);
+bool load_fat_table(size_t disknum);
