@@ -21,6 +21,7 @@ void halt() {
 
 // Load FAT table to heap 0x90000
 void load_fat_table(fat12header header, uint16_t sector_num) {
+    puts("Loading FAT table...\n");
     uint16_t track = sector_num / 18; // 18 sectors per track
     uint16_t cylinder = track / 2;
     uint16_t head = track % 2;
@@ -41,9 +42,7 @@ void load_kernel(fat12header header,uint16_t first_cluster) {
     
     uint16_t cur_cls = first_cluster;
     uint16_t next_cls;
-    printf("First data sector: 0x%d\n", first_data_sector);
     for(size_t i = 0; i < 128; i++) { // max 64kb of file
-        printf("Reading cluster: 0x%x\n", cur_cls);
         far_ptr dest = {
             .segment = 0x2000,
             .offset = i * 512
@@ -67,7 +66,7 @@ void load_kernel(fat12header header,uint16_t first_cluster) {
             next_cls = (next_cls >> 4) & 0x0FFF; // Odd cluster number
         }
         if (next_cls == 0xFFF) {
-            puts("Kernel loaded!\n");
+            puts("Starting kernel...\n");
             start_kernel(); // Jump to kernel entry point
             return;
         }
@@ -133,7 +132,6 @@ void init_fs() {
             }
         }
         if (found) {
-            puts("Found kernel file!\n");
             load_fat_table(header, reserved_sector_count+1);
             load_kernel(header, entry.DIR_FstClus);
             return;

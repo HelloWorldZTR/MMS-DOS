@@ -1,4 +1,7 @@
 /* kernel.c */
+/* This is the real kernel for MMS-DOS. It (therotically) sets up everthing
+    and starts the shell and other drivers, if any.
+*/
 #include "type.h"
 #include "display.h"
 #include "lib.h"

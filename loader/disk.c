@@ -1,3 +1,5 @@
+/* disk.c */
+/* This file provides a simple adapter for reading sectors from a disk using BIOS interrupts. */
 #include "disk.h"
 
 bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum, size_t n) {
