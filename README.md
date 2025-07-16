@@ -5,7 +5,7 @@ Mimic MS-DOS
 
 ```bash
 docker build -t dosdev .
-docker run -it --rm -v ${PWD}:/src dosdev
+docker run --privileged -it --rm -v ${PWD}:/src dosdev
 make all
 ```
 

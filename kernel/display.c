@@ -51,18 +51,26 @@ void test() {
     }
 }
 
+// Move the cursor to the next line
+// Scroll the screen if necessary
 void newline() {
     if (row + 1 == ROWNUM) {
+        // Scroll the screen up
         for (int i = 1; i < ROWNUM; i++) {
             for (int j = 0; j < COLNUM; j++) {
                 //video_memory[(i-1)*COLNUM + j] = video_memory[i*COLNUM + j];
                 write_to_buf((i-1)*COLNUM + j, read_from_buf(i*COLNUM + j), fg, bg);
             }
         }
+        // Clear the last row
+        for (int j = 0; j < COLNUM; j++) {
+            write_to_buf((ROWNUM-1)*COLNUM + j, ' ', fg, bg);
+        }
         col = 0;
         row = ROWNUM - 1;
     }
     else {
+        // Move the cursor down
         row ++;
         col = 0;
     }

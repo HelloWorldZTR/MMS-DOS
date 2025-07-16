@@ -4,6 +4,7 @@
 */
 #include "type.h"
 #include "display.h"
+#include "keyboard.h"
 #include "lib.h"
 #include "disk.h"
 
@@ -20,7 +21,7 @@ void kernel_main() {
         char input[256];
         gets(input, 256);
         printf("You entered: %s", input);
-        
+
         putchar('\n');
     }
 
