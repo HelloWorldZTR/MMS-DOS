@@ -25,7 +25,7 @@ void load_fat_table(fat12header header, uint16_t sector_num) {
     uint16_t track = sector_num / 18; // 18 sectors per track
     uint16_t cylinder = track / 2;
     uint16_t head = track % 2;
-    uint16_t sector = sector_num % 18;
+    uint16_t sector = sector_num % 18 + 1;
     bool ret = read_sector(heap_pointer(0), 0, cylinder, head, sector, 1);
     if (ret) {
         puts("Failed to read FAT table sector!\n");
@@ -48,11 +48,11 @@ void load_kernel(fat12header header,uint16_t first_cluster) {
             .offset = i * 512
         };
         // Convert cluster number to sector number (CHS)
-        uint16_t cur_sector = first_data_sector + (cur_cls - 2) * header.BPB_SecPerClus + 1;
+        uint16_t cur_sector = first_data_sector + (cur_cls - 2) * header.BPB_SecPerClus;
         uint16_t track = cur_sector / 18;
         uint16_t cylinder = track / 2;
         uint16_t head = track % 2;
-        uint16_t sector = cur_sector % 18;
+        uint16_t sector = cur_sector % 18 + 1;
         bool ret = read_sector(dest, 0, cylinder, head, sector, 1);
         if (ret) {
             printf("Failed to read cluster! 0x%x\n", ret);
@@ -132,7 +132,7 @@ void init_fs() {
             }
         }
         if (found) {
-            load_fat_table(header, reserved_sector_count+1);
+            load_fat_table(header, reserved_sector_count);
             load_kernel(header, entry.DIR_FstClus);
             return;
         }

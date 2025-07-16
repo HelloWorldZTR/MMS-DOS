@@ -15,6 +15,38 @@ void halt() {
     );
 }
 
+void ls() {
+    rootentry entry;
+
+    for(size_t i = 0; i < fat_header.BPB_RootEntCnt; i++) {
+        far_ptr entry_ptr = root_entry_ptr;
+        entry_ptr.offset += i * sizeof(rootentry);
+        heap2memcpy((uint8_t*)&entry, entry_ptr, sizeof(rootentry));
+
+        if(entry.DIR_Name[0] == 0x00) {
+            break; // End of entries
+        }
+        // Print the entry
+        printf("- ");
+        for(size_t j=0; j<11; j++) {
+            putchar(entry.DIR_Name[j]);
+        }
+        if (entry.DIR_Attr & 0x10) {
+            printf("<DIR>");
+        }
+        else {
+            printf("\t %dB", entry.DIR_FileSize);
+        }
+        printf(" 0x%x", entry.DIR_FstClus);
+        putchar('\n');
+    }
+}
+
+void cd() {
+    bool ret = read_fat_cls(root_entry_ptr, 0, 0x16);
+    if(ret) puts("Failed!\n");
+}
+
 /* Entry point for the kernel */
 void kernel_main() {
     setcolor(WHITE, BLACK); // Set foreground and background colors
@@ -31,25 +63,20 @@ void kernel_main() {
         halt();
     }
 
-    // printf("FAT Header: %s\n", fat_header.BS_OEMName);
-    // for(size_t i = 0; i < fat_header.BPB_RootEntCnt; i++) {
-    //     rootentry entry;
-    //     far_ptr entry_ptr = root_entry_ptr;
-    //     entry_ptr.offset += i * sizeof(rootentry);
-    //     heap2memcpy((uint8_t*)&entry, entry_ptr, sizeof(rootentry));
-
-    //     if(entry.DIR_Name[0] == 0x00) {
-    //         break; // End of entries
-    //     }
-
-    //     printf("- %s\n", entry.DIR_Name);
-    // }
-
     while(1) {
         printf("A:/>");
         char input[256];
         gets(input, 256);
-        printf("You entered: %s", input);
+        if (strcmp(input, "ls") == 0) {
+            ls();
+        } else if (strcmp(input, "cd") == 0) {
+            cd();
+        } else if (strcmp(input, "halt") == 0) {
+            puts("Halting system...\n");
+            halt();
+        } else {
+            puts("Unknown command!\n");
+        }
 
         putchar('\n');
     }

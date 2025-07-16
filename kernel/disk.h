@@ -33,16 +33,20 @@ typedef struct _fat12header
 
 #pragma pack(push)
 #pragma pack(1)
-typedef struct _rootentry
-{
-	uint8_t DIR_Name[11];
-	uint8_t DIR_Attr;
-	uint8_t reserve[10];
-	uint16_t DIR_WrtTime;
-	uint16_t DIR_WrtDate;
-	uint16_t DIR_FstClus;
-	uint32_t DIR_FileSize;
-}rootentry;
+typedef struct _rootentry {
+    uint8_t  DIR_Name[11];     // 文件名（8字节）+扩展名（3字节）
+    uint8_t  DIR_Attr;         // 属性
+    uint8_t  DIR_NTRes;        // 保留给Windows NT用（通常为0）
+    uint8_t  DIR_CrtTimeTenth; // 创建时间的 10ms 单位
+    uint16_t DIR_CrtTime;      // 创建时间
+    uint16_t DIR_CrtDate;      // 创建日期
+    uint16_t DIR_LstAccDate;   // 最后访问日期
+    uint16_t DIR_FstClusHI;    // 起始簇号的高16位（FAT32才用，FAT12/16应为0）
+    uint16_t DIR_WrtTime;      // 最后写入时间
+    uint16_t DIR_WrtDate;      // 最后写入日期
+    uint16_t DIR_FstClus;      // 起始簇号低16位（FAT12/16 实际使用这个）
+    uint32_t DIR_FileSize;     // 文件大小（字节）
+} rootentry;
 #pragma pack(pop)
 
 fat12header fat_header;
@@ -52,3 +56,4 @@ far_ptr fat_table_ptr;
 bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum);
 bool read_fat_header(size_t disknum);
 bool load_fat_table(size_t disknum);
+bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster);
