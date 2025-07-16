@@ -29,6 +29,8 @@ extern uint16_t col;            // Current column
 extern Color fg;                // Foreground color
 extern Color bg;                // Background color
 
+void move_cursor(uint16_t row, uint16_t col);
+void backspace();
 void setcolor(Color, Color);
 void clear();
 void putchar(const char);

@@ -41,6 +41,38 @@ static char read_from_buf(unsigned int pos) {
     return (char)(value & 0xFF);
 }
 
+// Show a blinking cursor at row, col
+void move_cursor(uint16_t row, uint16_t col) {
+    uint16_t rowcol = row << 8 | col;
+    asm volatile(
+        "movb $0x02, %%ah\n"
+        "movw %[rowcol], %%dx\n"
+        "movb $0x00, %%bh\n"
+        "int $0x10\n"
+        :
+        : [rowcol] "r"(rowcol)
+        : "ax", "dx"
+    );
+}
+
+// Back space a character
+// Go to the previous line if cursor is already at the beginning of the line
+void backspace() {
+    if (col == 0) {
+        if (row > 0) {
+            row --;
+            col = COLNUM - 1;
+            write_to_buf(row * COLNUM + col, ' ', fg, bg);
+            move_cursor(row, col);
+        }
+    }
+    else {
+        col --;
+        write_to_buf(row * COLNUM + col, ' ', fg, bg);
+        move_cursor(row, col);
+    }
+}
+
 void test() {
     write_to_buf(0, 'M', fg, bg);
     char c = read_from_buf(0);
@@ -74,6 +106,7 @@ void newline() {
         row ++;
         col = 0;
     }
+    move_cursor(row, col);
 }
 
 // Set foreground and background color
@@ -90,24 +123,35 @@ void clear() {
     }
     row = 0;
     col = 0;
+    move_cursor(row, col);
 }
 
 // Print a character to screen buffer
 void putchar(const char c) {
     if (c == '\t') {
-        col += 4; // Row increment will be taken care of in the next function call
+        col += 4;
+        if (col >= COLNUM) {
+            newline(); // This handles row and col change
+        }
         return;
     }
-    if (c == '\n') {
+    else if (c == '\n') {
         newline();
         return;
     } 
-    else if (col >= COLNUM) {
-        newline();
+    else if (c == '\b') {
+        backspace();
+        return;
+    }   
+    else {
+        write_to_buf(row * COLNUM + col, c, fg, bg);
+        col++;
+        if (col >= COLNUM) {
+            newline(); // This handles row and col change
+        } else {
+            move_cursor(row, col);
+        }
     }
-    // video_memory[row*COLNUM + col] = translate(c, fg, bg);
-    write_to_buf(row * COLNUM + col, c, fg, bg);
-    col++; // Row increment will be taken care of in the next function call
 }
 
 // Print a char* to screen buffer

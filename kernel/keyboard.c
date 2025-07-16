@@ -15,38 +15,64 @@ uint8_t poll_keyboard() {
     return keycode;
 }
 
-// Get ascii code of the key press, if enter is pressed 
-// return \n
+// Get ascii code of the key press
+// Return \0 if key press is not a printable character
 // Terminal echo is on
 char getchar() {
     uint8_t keycode = poll_keyboard();
-    uint8_t ascii = keycode & 0x7F;
-    switch (ascii) {
-        case 0x08:
-            ascii = '\b';
-        case 0x09:
-            ascii = '\t';
-        case 0x0A:
-        case 0x0D:
-            ascii = '\n';
+    if (keycode < 0x20 || keycode == 0x7F) {
+        return '\0'; // Non-printable character
     }
-    putchar(ascii);
-    return ascii;
+    else {
+        uint8_t ascii = keycode & 0x7F;
+        putchar(ascii);
+        return ascii;
+    }
 }
 
 // Get a string with a maximum length of n, 
 // stops if enter is pressed
 char* gets(char *buf, size_t n) {
-    for (size_t i = 0; i < n - 1; i++) {
-        char c = getchar();
-        if (c == '\n') {
-            buf[i] = '\0';
+    size_t i = 0;
+    while(1) {
+        uint8_t keycode = poll_keyboard();
+        char c = keycode & 0x7F; // Get ascii code
+        switch (c) {
+            case 0x08: // Backspace
+                c = '\b';
+                if (i > 0) {
+                    i--;
+                    buf[i] = '\0';
+                    putchar(c); // Echo backspace
+                }
+                break;
+            case 0x09:
+                c = '\t';
+                for (size_t j = 0; j < 4; j++) { // Tab is 4 spaces
+                    if (i < n - 1) {
+                        buf[i++] = ' ';
+                        putchar(' ');
+                    }
+                }
+                break;
+            case 0x0A:
+            case 0x0D:
+                c = '\n';
+                buf[i] = '\0';
+                putchar(c);
+                return buf;
+            default:
+                buf[i++] = c;
+                putchar(c);
+                break;
+        }
+
+        if (i >= n - 1) {
+            buf[n - 1] = '\0';
             return buf;
         }
-        buf[i] = c;
     }
-    buf[n - 1] = '\0';
-    return buf;
+    return buf; // Should never reach here
 }
 
 
