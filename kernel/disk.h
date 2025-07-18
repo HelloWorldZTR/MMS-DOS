@@ -54,11 +54,11 @@ far_ptr file_buffer_ptr;
 far_ptr root_entry_ptr;
 far_ptr fat_table_ptr;
 
-bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum);
-bool read_fat_header(size_t disknum);
-bool load_fat_table(size_t disknum);
-bool read_root_entry(size_t disknum);
-bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster);
+int read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum);
+int read_fat_header(size_t disknum);
+int load_fat_table(size_t disknum);
+int read_root_entry(size_t disknum);
+int read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster);
 
 void fat2human(char* dest, const char* src);
-bool human2fat(char* dest, const char* src);
+int human2fat(char* dest, const char* src);

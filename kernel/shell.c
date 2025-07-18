@@ -53,7 +53,7 @@ void cd(char *name) {
         return;
     }
     char formated_name[11];
-    bool ret = human2fat(formated_name, name);
+    int ret = human2fat(formated_name, name);
     if (ret) {
         puts("Invalid directory name!\n");
         return;
@@ -84,7 +84,7 @@ void cd(char *name) {
                     return;
                 }
                 if (strcmp(name, "..") == 0) { // Is upper directory
-                    bool ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
+                    int ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
                     if (!ret) { // Change directory successful
                         cwd_index--;
                     }
@@ -97,7 +97,7 @@ void cd(char *name) {
                     return; // Do nothing
                 }
                 else if (cwd_index < MAX_CWD_DEPTH - 1) { // Is normal directory
-                    bool ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
+                    int ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
                     if (!ret) { // Change directory successful
                         memcpy(cwd[cwd_index], name, 11);
                         cwd_index++;
@@ -138,7 +138,7 @@ void cat(char* name) {
         return;
     }
     char formated_name[11];
-    bool ret = human2fat(formated_name, name);
+    int ret = human2fat(formated_name, name);
     if (ret) {
         puts("Invalid file name!\n");
         return;

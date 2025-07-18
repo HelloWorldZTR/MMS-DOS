@@ -45,4 +45,4 @@ typedef struct _rootentry
 }rootentry;
 #pragma pack(pop)
 
-bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum, size_t n);
+int read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum, size_t n);

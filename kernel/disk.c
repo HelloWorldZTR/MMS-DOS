@@ -22,7 +22,7 @@ far_ptr fat_table_ptr = { // Max 4kb 0x10000 - 0x10FFF
 // disknum: 0 by default
 // cylinder, head, sector: CHS addressing
 // return error code (0 for success, non-zero for failure)
-bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum) {
+int read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum) {
     uint16_t seg = dest.segment;
     uint16_t off = dest.offset;
     uint16_t cylsec = cylindernum << 8 | sectornum;
@@ -44,17 +44,17 @@ bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnu
         : "a"(seg), "b"(off), "c"(cylsec), "d"(headdisk)
         : "cc"
     );
-    return (uint16_t)err;
+    return err;
 }
 
 // Read the FAT header from the disknum and store it in fat_header
 // Returns true if the read was successful, false otherwise
-bool read_fat_header(size_t disknum) {
+int read_fat_header(size_t disknum) {
     far_ptr tmp_ptr = {
         .segment = 0x1000,
         .offset = 0
-    }; 
-    bool ret = read_sector(tmp_ptr, disknum, 0, 0, 1);
+    };
+    int ret = read_sector(tmp_ptr, disknum, 0, 0, 1);
     
     if (ret) {
         puts("Failed to read FAT header!\n");
@@ -70,8 +70,7 @@ bool read_fat_header(size_t disknum) {
 // root_entry_ptr: far pointer to the root entries
 // disknum: the disk number to read from
 // Returns true if the read was successful, false otherwise
-bool load_fat_table(size_t disknum) {
-    bool ret = false;
+int load_fat_table(size_t disknum) {
     // Dont ask me why I copy all these variables
     // They will be optimized by the compiler anyway
     size_t bytes_per_sector = fat_header.BPB_BytePerSec;
@@ -95,7 +94,7 @@ bool load_fat_table(size_t disknum) {
     size_t fat_table_head = fat_table_track % 2;
     size_t fat_table_sector = fat_table_pos % 18 + 1;
 
-    ret = read_sector(fat_table_ptr, disknum, fat_table_cylinder, fat_table_head, fat_table_sector);
+    int ret = read_sector(fat_table_ptr, disknum, fat_table_cylinder, fat_table_head, fat_table_sector);
     if (ret) {
         puts("Failed to read FAT table sector!\n");
     }
@@ -106,9 +105,7 @@ bool load_fat_table(size_t disknum) {
 // Read the root entries from the disk and store them in root_entry_ptr
 // disknum: the disk number to read from
 // Returns true if the read was successful, false otherwise
-bool read_root_entry(size_t disknum) {
-    bool ret = false;
-
+int read_root_entry(size_t disknum) {
     size_t bytes_per_sector = fat_header.BPB_BytePerSec;
     size_t sectors_per_cluster = fat_header.BPB_SecPerClus;
     size_t sectors_per_track = fat_header.BPB_SecPerTrk;
@@ -123,7 +120,7 @@ bool read_root_entry(size_t disknum) {
     size_t entry_sector = rootentry_pos % sectors_per_track + 1;
     size_t entry_cylinder = entry_track / 2;
     size_t entry_head = entry_track % 2;
-    ret = read_sector(root_entry_ptr, disknum, entry_cylinder, entry_head, entry_sector);
+    int ret = read_sector(root_entry_ptr, disknum, entry_cylinder, entry_head, entry_sector);
     if (ret) {
         puts("Failed to read root entry sector!\n");
     }
@@ -134,9 +131,9 @@ bool read_root_entry(size_t disknum) {
 // dest: far pointer to the destination memory
 // disknum: the disk number to read from
 // first_cluster: the starting cluster number
-// Returns true if the read was successful, false otherwise
+// Returns 0 if the read was successful, non-zero if there was an error
 // TODO: Add size constraint to prevent blowing up file buffer
-bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
+int read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
 
     size_t first_data_sector = fat_header.BPB_RsvdSecCnt + (fat_header.BPB_NumFATs * fat_header.BPB_FATSz16) + fat_header.BPB_RootEntCnt * sizeof(rootentry) / 512;
 
@@ -154,7 +151,7 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
         uint16_t cylinder = track / 2;
         uint16_t head = track % 2;
         uint16_t sector = cur_sector % 18 + 1;
-        bool ret = read_sector(cur_dest, disknum, cylinder, head, sector);
+        int ret = read_sector(cur_dest, disknum, cylinder, head, sector);
         if(ret) return ret;
 
         // next_cls = heap_read16(cur_cls * 3 / 2);
@@ -169,11 +166,11 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
         }
 
         if (next_cls >= 0xFF0 && next_cls != 0xFF7) { // End of cluster chain and not a bad cluster
-            return false;
+            return 0;
         }
         cur_cls = next_cls;
     }
-    return false;
+    return 1; // Not successful
 }
 
 // Format a FAT name from a source string to a destination string
@@ -207,18 +204,18 @@ void fat2human(char* dest, const char* src) {
 // src: source string filename < 7 chars, extension < 3 chars
 // AAAAAAABBB
 // AAAAAAA.BBB
-// Returns false if the conversion was successful, true otherwise
-bool human2fat(char* dest, const char* src) {
+// Returns 0 if the conversion was successful, 1 otherwise
+int human2fat(char* dest, const char* src) {
     // Special cases
     if (strcmp(src, ".") == 0) {
         memset(dest, ' ', 11);
         dest[0] = '.';
-        return false;
+        return 0;
     }
     else if (strcmp(src, "..") == 0) {
         memset(dest, ' ', 11);
         dest[0] = dest[1] = '.';
-        return false;
+        return 0;
     }
     // Check length
     char* dot = strchr(src, '.');
@@ -226,17 +223,17 @@ bool human2fat(char* dest, const char* src) {
         size_t name_len = dot - src;
         if (name_len > 8) {
             puts("File name too long!\n");
-            return true; // Name too long
+            return 1; // Name too long
         }
         if (strlen(src) - name_len - 1 > 3) {
             puts("File extension too long!\n");
-            return true; // Extension too long
+            return 1; // Extension too long
         }
     } 
     else {
         if (strlen(src) > 8) {
             puts("File name too long!\n");
-            return true; // Name too long
+            return 1; // Name too long
         }
     }
     // Clear destination (Only after checking length)
@@ -253,5 +250,5 @@ bool human2fat(char* dest, const char* src) {
             dest[8 + i] = dot[1 + i]; // dot[0] is '.'
         }
     }
-    return false;
+    return 0;
 }

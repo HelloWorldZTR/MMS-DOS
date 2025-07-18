@@ -26,7 +26,7 @@ void load_fat_table(fat12header header, uint16_t sector_num) {
     uint16_t cylinder = track / 2;
     uint16_t head = track % 2;
     uint16_t sector = sector_num % 18 + 1;
-    bool ret = read_sector(heap_pointer(0), 0, cylinder, head, sector, 1);
+    int ret = read_sector(heap_pointer(0), 0, cylinder, head, sector, 1);
     if (ret) {
         puts("Failed to read FAT table sector!\n");
         return;
@@ -53,7 +53,7 @@ void load_kernel(fat12header header,uint16_t first_cluster) {
         uint16_t cylinder = track / 2;
         uint16_t head = track % 2;
         uint16_t sector = cur_sector % 18 + 1;
-        bool ret = read_sector(dest, 0, cylinder, head, sector, 1);
+        int ret = read_sector(dest, 0, cylinder, head, sector, 1);
         if (ret) {
             printf("Failed to read cluster! 0x%x\n", ret);
             return;
@@ -79,7 +79,7 @@ void load_kernel(fat12header header,uint16_t first_cluster) {
 void init_fs() {
     // Load header into heap
     puts("Loading Disk...\n");
-    bool ret = read_sector(heap_pointer(0), 0, 0, 0, 1, 1); //read sector 1 
+    int ret = read_sector(heap_pointer(0), 0, 0, 0, 1, 1); //read sector 1
     if (ret) puts("Disk load failed!\n");
 
     fat12header header;

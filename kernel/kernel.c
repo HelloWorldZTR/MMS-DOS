@@ -19,11 +19,7 @@ void kernel_main() {
 
     puts("Hi! Welcome to MMS-DOS!\n");
 
-    bool ret = false;
-    ret |= read_fat_header(0);
-    ret |= load_fat_table(0);
-    ret |= read_root_entry(0);
-    if (ret) {
+    if (read_fat_header(0) || load_fat_table(0) || read_root_entry(0)) {
         puts("Failed to initialize FS!\n");
         halt();
     }
