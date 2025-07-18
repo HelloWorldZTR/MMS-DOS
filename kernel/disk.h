@@ -56,4 +56,5 @@ far_ptr fat_table_ptr;
 bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum,  size_t headnum, size_t sectornum);
 bool read_fat_header(size_t disknum);
 bool load_fat_table(size_t disknum);
+bool read_root_entry(size_t disknum);
 bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster);

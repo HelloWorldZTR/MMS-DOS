@@ -62,6 +62,8 @@
     "*.wxs": "javascript",
     "type.h": "c",
     "display.h": "c",
-    "lib.h": "c"
+    "lib.h": "c",
+    "shell.h": "c",
+    "disk.h": "c"
   }
 }

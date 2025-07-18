@@ -1,3 +1,4 @@
+/* disk.c */
 #include "disk.h"
 #include "lib.h"
 #include "display.h"
@@ -12,6 +13,11 @@ far_ptr fat_table_ptr = { // Max 4kb 0x10000 - 0x10FFF
     .offset = 0x0000
 };
 
+// Read one sector from the disk using BIOS interrupt 0x13
+// dest: far pointer to the destination memory
+// disknum: 0 by default
+// cylinder, head, sector: CHS addressing
+// return error code (0 for success, non-zero for failure)
 bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnum, size_t sectornum) {
     uint16_t seg = dest.segment;
     uint16_t off = dest.offset;
@@ -37,6 +43,8 @@ bool read_sector(far_ptr dest, size_t disknum, size_t cylindernum, size_t headnu
     return (uint16_t)err;
 }
 
+// Read the FAT header from the disknum and store it in fat_header
+// Returns true if the read was successful, false otherwise
 bool read_fat_header(size_t disknum) {
     far_ptr tmp_ptr = {
         .segment = 0x1000,
@@ -52,9 +60,16 @@ bool read_fat_header(size_t disknum) {
     return ret;
 }
 
+// Load the FAT table and root entries into memory
+// and store then into fat_table_ptr and root_entry_ptr
+// fat_table_ptr: far pointer to the FAT table
+// root_entry_ptr: far pointer to the root entries
+// disknum: the disk number to read from
+// Returns true if the read was successful, false otherwise
 bool load_fat_table(size_t disknum) {
     bool ret = false;
-
+    // Dont ask me why I copy all these variables
+    // They will be optimized by the compiler anyway
     size_t bytes_per_sector = fat_header.BPB_BytePerSec;
     size_t sectors_per_cluster = fat_header.BPB_SecPerClus;
     size_t sectors_per_track = fat_header.BPB_SecPerTrk;
@@ -79,18 +94,43 @@ bool load_fat_table(size_t disknum) {
     ret = read_sector(fat_table_ptr, disknum, fat_table_cylinder, fat_table_head, fat_table_sector);
     if (ret) {
         puts("Failed to read FAT table sector!\n");
-        return ret;
-    }
-    
-    ret = read_sector(root_entry_ptr, disknum, entry_cylinder, entry_head, entry_sector);
-    if (ret) {
-        puts("Failed to read root entry sector!\n");
-        return ret;
     }
 
     return ret;
 }
 
+// Read the root entries from the disk and store them in root_entry_ptr
+// disknum: the disk number to read from
+// Returns true if the read was successful, false otherwise
+bool read_root_entry(size_t disknum) {
+    bool ret = false;
+
+    size_t bytes_per_sector = fat_header.BPB_BytePerSec;
+    size_t sectors_per_cluster = fat_header.BPB_SecPerClus;
+    size_t sectors_per_track = fat_header.BPB_SecPerTrk;
+    size_t reserved_sector_count = fat_header.BPB_RsvdSecCnt;
+    size_t fat_table_count = fat_header.BPB_NumFATs;
+    size_t fat_table_sector_count = fat_header.BPB_FATSz16;
+    size_t root_entry_count = fat_header.BPB_RootEntCnt;
+
+    size_t rootentry_pos = reserved_sector_count + (fat_table_count * fat_table_sector_count);
+    size_t rootentry_length = root_entry_count * sizeof(rootentry);
+    size_t entry_track = rootentry_pos / sectors_per_track;
+    size_t entry_sector = rootentry_pos % sectors_per_track + 1;
+    size_t entry_cylinder = entry_track / 2;
+    size_t entry_head = entry_track % 2;
+    ret = read_sector(root_entry_ptr, disknum, entry_cylinder, entry_head, entry_sector);
+    if (ret) {
+        puts("Failed to read root entry sector!\n");
+    }
+    return ret;
+}
+
+// Read the FAT cluster chain starting from first_cluster
+// dest: far pointer to the destination memory
+// disknum: the disk number to read from
+// first_cluster: the starting cluster number
+// Returns true if the read was successful, false otherwise
 bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
 
     size_t first_data_sector = fat_header.BPB_RsvdSecCnt + (fat_header.BPB_NumFATs * fat_header.BPB_FATSz16) + fat_header.BPB_RootEntCnt * sizeof(rootentry) / 512;
@@ -122,7 +162,8 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
         } else {
             next_cls = (next_cls >> 4) & 0x0FFF; // Odd cluster number
         }
-        if (next_cls == 0xFFF) {
+
+        if (next_cls >= 0xFF0 && next_cls != 0xFF7) { // End of cluster chain and not a bad cluster
             return false;
         }
         cur_cls = next_cls;

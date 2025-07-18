@@ -15,6 +15,17 @@ void memset(near_ptr dest, char value, size_t n) {
     }
 }
 
+bool start_with(const char* str, const char* prefix) {
+    while (*prefix) {
+        if (*str != *prefix) {
+            return false;
+        }
+        str++;
+        prefix++;
+    }
+    return true;
+}
+
 size_t strlen(const near_ptr str) {
     size_t len = 0;
     while (str[len] != '\0') {

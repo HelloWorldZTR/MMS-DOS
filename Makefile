@@ -70,6 +70,7 @@ clean:
 	rm -f bootloader/bootloader.bin
 	rm -f loader/*.o
 	rm -f loader/LOADER.SYS
+	rm -f kernel/*.o
 	rm -f fs/KERNEL.SYS
 	rm -f system.img
 

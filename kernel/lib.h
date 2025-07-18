@@ -7,6 +7,7 @@ void memset(near_ptr dest, char value, size_t n);
 
 size_t strlen(const near_ptr str);
 int strcmp(const char* str1, const char* str2);
+bool start_with(const char* str, const char* prefix);
 
 // Far pointer functions
 uint16_t far_ptr_read(far_ptr p);
