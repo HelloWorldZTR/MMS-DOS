@@ -170,3 +170,33 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
     }
     return false;
 }
+
+// Format a FAT name from a source string to a destination string
+// Out put is exactly 12 characters long
+// dest: destination string (at least 13 bytes long)
+// src: source string (11 bytes long)
+// AAAAAAA.BBB
+// AAAAAAABBB
+void fat_to_human(char* dest, const char* src) {
+    for(size_t i = 0; i < 12; i++) dest[i] = ' ';
+    bool has_dot = false;
+    if(src[8] != ' ') has_dot = true;
+
+    size_t j = 0;
+    for (size_t i = 0; i < 7; i++) { // Copy file name
+        if (src[i] == ' ') break;
+        dest[j++] = src[i];
+    }
+    if (has_dot) {
+        dest[j++] = '.';
+    }
+    for (size_t i = 8; i < 11; i++) { // Copy file extension
+        if (src[i] == ' ') break;
+        dest[j++] = src[i];
+    }
+    dest[12] = '\0';
+}
+
+void human_to_fat(char* dest, const char* src) {
+    
+}

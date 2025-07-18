@@ -11,13 +11,8 @@ int cwd_index = 0;
 char drv = 'A';
 int disknum = 0;
 
-Command commands[] = {
-    {"ls", ls},
-    {"cd", cd}
-};
-#define COMMAND_COUNT  (sizeof(commands) / sizeof(Command))
-
 void halt() {
+    puts("System halted.\n");
     asm volatile (
         "cli\n" // Disable interrupts
         "hlt\n" // Halt the CPU
@@ -26,21 +21,21 @@ void halt() {
 
 void ls(char *args) {
     rootentry entry;
+    char formated_name[13];
     puts("\nFile Name\t\tType\tSize\n");
     puts("-------------------------------\n");
     for(size_t i = 0; i < fat_header.BPB_RootEntCnt; i++) {
         far_ptr entry_ptr = root_entry_ptr;
         entry_ptr.offset += i * sizeof(rootentry);
         heap2memcpy((uint8_t*)&entry, entry_ptr, sizeof(rootentry));
+        format_fat_name(formated_name, (const char*)entry.DIR_Name);
 
         if(entry.DIR_Name[0] == 0x00) {
             break; // End of entries
         }
         // Print the entry
         printf("- ");
-        for(size_t j=0; j<11; j++) {
-            putchar(entry.DIR_Name[j]);
-        }
+        puts(formated_name);
         if (entry.DIR_Attr & 0x10) {
             printf("\t<DIR>");
         }
@@ -127,6 +122,22 @@ void cd(char *name) {
     printf("Directory %s not found!\n", name);
 }
 
+void cls(char* args) {
+    clear();
+}
+
+void pwd(char* args) {
+    printf("%c:/", drv);
+    for (int i = 0; i < cwd_index; i++) {
+        printf("%s/", cwd[i]);
+    }
+    putchar('\n');
+}
+
+void cat(char* name) {
+
+}
+
 void print_prompt() {
     printf("%c:/", drv);
     for (int i = 0; i < cwd_index; i++) {
@@ -134,6 +145,14 @@ void print_prompt() {
     }
     putchar('>');
 }
+
+Command commands[] = {
+    {"ls", ls},
+    {"cd", cd},
+    {"cls", cls},
+    {"pwd", pwd}
+};
+#define COMMAND_COUNT  (sizeof(commands) / sizeof(Command))
 
 
 void shell_main() {

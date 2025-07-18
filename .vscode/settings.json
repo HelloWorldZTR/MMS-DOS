@@ -64,6 +64,7 @@
     "display.h": "c",
     "lib.h": "c",
     "shell.h": "c",
-    "disk.h": "c"
+    "disk.h": "c",
+    "keyboard.h": "c"
   }
 }
