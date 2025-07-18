@@ -4,6 +4,10 @@
 #include "display.h"
 
 fat12header fat_header;
+far_ptr file_buffer_ptr = {// Max 8kb 0x12000 - 0x13FFF
+    .segment = 0x1000,
+    .offset = 0x2000
+};
 far_ptr root_entry_ptr = {// Max 4kb 0x11000 - 0x11FFF
     .segment = 0x1000,
     .offset = 0x1000
@@ -131,6 +135,7 @@ bool read_root_entry(size_t disknum) {
 // disknum: the disk number to read from
 // first_cluster: the starting cluster number
 // Returns true if the read was successful, false otherwise
+// TODO: Add size constraint to prevent blowing up file buffer
 bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
 
     size_t first_data_sector = fat_header.BPB_RsvdSecCnt + (fat_header.BPB_NumFATs * fat_header.BPB_FATSz16) + fat_header.BPB_RootEntCnt * sizeof(rootentry) / 512;

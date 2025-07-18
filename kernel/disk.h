@@ -50,6 +50,7 @@ typedef struct _rootentry {
 #pragma pack(pop)
 
 fat12header fat_header;
+far_ptr file_buffer_ptr;
 far_ptr root_entry_ptr;
 far_ptr fat_table_ptr;
 

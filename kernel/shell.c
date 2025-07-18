@@ -163,7 +163,23 @@ void cat(char* name) {
         }
         if (match) {
             if (!(entry.DIR_Attr & 0x10)) { // Is not a directory
-               printf("Placeholder for file reading.....\n");
+                // Read the file content to buffer
+                read_fat_cls(file_buffer_ptr, disknum, entry.DIR_FstClus);
+                // Print the file content
+                size_t file_size = entry.DIR_FileSize;
+                char temp_buffer[512];
+                far_ptr temp_ptr = file_buffer_ptr;
+                while(file_size) {
+                    size_t to_read = file_size < 512 ? file_size : 512;
+                    heap2memcpy(temp_buffer, temp_ptr, to_read);
+                    for (size_t j = 0; j < to_read; j++) {
+                        putchar(temp_buffer[j]);
+                    }
+                    file_size -= to_read;
+                    temp_ptr.offset += to_read;
+                }
+                putchar('\n');
+                return;
             } else {
                 puts("Not a file!\n");
                 return;
