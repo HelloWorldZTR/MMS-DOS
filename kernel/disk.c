@@ -143,7 +143,7 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
             .offset = dest.offset + i * 512
         };
         // Convert cluster number to sector number (CHS)
-        printf("Reading cluster 0x%x\n", cur_cls);
+        // printf("Reading cluster 0x%x\n", cur_cls);
         uint16_t cur_sector = first_data_sector + (cur_cls - 2) * fat_header.BPB_SecPerClus;
         uint16_t track = cur_sector / 18;
         uint16_t cylinder = track / 2;
@@ -177,7 +177,7 @@ bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
 // src: source string (11 bytes long)
 // AAAAAAA.BBB
 // AAAAAAABBB
-void fat_to_human(char* dest, const char* src) {
+void fat2human(char* dest, const char* src) {
     for(size_t i = 0; i < 12; i++) dest[i] = ' ';
     bool has_dot = false;
     if(src[8] != ' ') has_dot = true;
@@ -197,6 +197,56 @@ void fat_to_human(char* dest, const char* src) {
     dest[12] = '\0';
 }
 
-void human_to_fat(char* dest, const char* src) {
-    
+// Convert a human-readable file name to a FAT name
+// dest: destination string exactly 11 bytes long
+// src: source string filename < 7 chars, extension < 3 chars
+// AAAAAAABBB
+// AAAAAAA.BBB
+// Returns false if the conversion was successful, true otherwise
+bool human2fat(char* dest, const char* src) {
+    // Special cases
+    if (strcmp(src, ".") == 0) {
+        memset(dest, ' ', 11);
+        dest[0] = '.';
+        return false;
+    }
+    else if (strcmp(src, "..") == 0) {
+        memset(dest, ' ', 11);
+        dest[0] = dest[1] = '.';
+        return false;
+    }
+    // Check length
+    char* dot = strchr(src, '.');
+    if (dot) {
+        size_t name_len = dot - src;
+        if (name_len > 8) {
+            puts("File name too long!\n");
+            return true; // Name too long
+        }
+        if (strlen(src) - name_len - 1 > 3) {
+            puts("File extension too long!\n");
+            return true; // Extension too long
+        }
+    } 
+    else {
+        if (strlen(src) > 8) {
+            puts("File name too long!\n");
+            return true; // Name too long
+        }
+    }
+    // Clear destination (Only after checking length)
+    memset(dest, ' ', 11);
+    // Copy name
+    size_t name_len = dot ? dot - src : strlen(src);
+    for(size_t i = 0; i < name_len; i++) {
+        dest[i] = src[i];
+    }
+    // Copy extension
+    if (dot) {
+        size_t ext_len = strlen(src) - name_len - 1;
+        for (size_t i = 0; i < ext_len; i++) {
+            dest[8 + i] = dot[1 + i]; // dot[0] is '.'
+        }
+    }
+    return false;
 }

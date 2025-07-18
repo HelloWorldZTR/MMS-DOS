@@ -59,4 +59,5 @@ bool load_fat_table(size_t disknum);
 bool read_root_entry(size_t disknum);
 bool read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster);
 
-void format_fat_name(char* dest, const char* src);
+void fat2human(char* dest, const char* src);
+bool human2fat(char* dest, const char* src);

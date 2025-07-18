@@ -28,7 +28,7 @@ void ls(char *args) {
         far_ptr entry_ptr = root_entry_ptr;
         entry_ptr.offset += i * sizeof(rootentry);
         heap2memcpy((uint8_t*)&entry, entry_ptr, sizeof(rootentry));
-        format_fat_name(formated_name, (const char*)entry.DIR_Name);
+        fat2human(formated_name, (const char*)entry.DIR_Name);
 
         if(entry.DIR_Name[0] == 0x00) {
             break; // End of entries
@@ -48,17 +48,15 @@ void ls(char *args) {
 }
 
 void cd(char *name) {
-    char formated_name[11];
-    for (size_t i = 0; i < 11; i++) {
-        formated_name[i] = ' ';
+    if(name == NULL || name[0] == '\0') {
+        puts("No directory name provided!\n");
+        return;
     }
-    for (size_t i = 0; i < strlen(name); i++) {
-        if (i < 11) {
-            formated_name[i] = name[i];
-        } else {
-            puts("Directory name too long!\n");
-            return; // Name too long
-        }
+    char formated_name[11];
+    bool ret = human2fat(formated_name, name);
+    if (ret) {
+        puts("Invalid directory name!\n");
+        return;
     }
 
     rootentry entry;
@@ -135,7 +133,55 @@ void pwd(char* args) {
 }
 
 void cat(char* name) {
+    if (name == NULL || name[0] == '\0') {
+        puts("No file name provided!\n");
+        return;
+    }
+    char formated_name[11];
+    bool ret = human2fat(formated_name, name);
+    if (ret) {
+        puts("Invalid file name!\n");
+        return;
+    }
 
+    rootentry entry;
+    for(size_t i = 0; i < fat_header.BPB_RootEntCnt; i++) {
+        far_ptr entry_ptr = root_entry_ptr;
+        entry_ptr.offset += i * sizeof(rootentry);
+        heap2memcpy((uint8_t*)&entry, entry_ptr, sizeof(rootentry));
+
+        if(entry.DIR_Name[0] == '\0') {
+            break; // End of entries
+        }
+        
+        bool match = true;
+        for (size_t j = 0; j < 11; j++) {
+            if (entry.DIR_Name[j] != formated_name[j]) {
+                match = false;
+                break;
+            }
+        }
+        if (match) {
+            if (!(entry.DIR_Attr & 0x10)) { // Is not a directory
+               printf("Placeholder for file reading.....\n");
+            } else {
+                puts("Not a file!\n");
+                return;
+            }
+        }
+    }
+    printf("File %s not found!\n", name);
+}
+
+
+void test_fn(char* args) {
+    puts("Test???\n");
+    char test_str[] = "Hello-Wo-rld!";
+    char* token = strtok(test_str, "-");
+    while (token) {
+        printf("Token: %s\n", token);
+        token = strtok(NULL, "-");
+    }
 }
 
 void print_prompt() {
@@ -150,7 +196,9 @@ Command commands[] = {
     {"ls", ls},
     {"cd", cd},
     {"cls", cls},
-    {"pwd", pwd}
+    {"pwd", pwd},
+    {"test", test_fn},
+    {"cat", cat}
 };
 #define COMMAND_COUNT  (sizeof(commands) / sizeof(Command))
 
@@ -162,9 +210,11 @@ void shell_main() {
         gets(input, 256);
         
         bool command_found = false;
+        char* command_name = strtok(input, " ");
+        char* args = strtok(NULL, " "); // Could be NULL
         for (size_t i = 0; i < COMMAND_COUNT; i++) {
-            if (start_with(input, commands[i].name)) {
-                commands[i].func(input + strlen(commands[i].name) + 1);
+            if (strcmp(command_name, commands[i].name) == 0) {
+                commands[i].func(args);
                 command_found = true;
                 break;
             }

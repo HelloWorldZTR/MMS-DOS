@@ -42,6 +42,42 @@ int strcmp(const char* str1, const char* str2) {
     return *(unsigned char*)str1 - *(unsigned char*)str2;
 }
 
+char* strchr(const char* str, char c) {
+    while (*str) {
+        if (*str == c) {
+            return str;
+        }
+        str++;
+    }
+    return NULL; // Not found
+}
+
+char* next_token = NULL;
+char* strtok(char* str, const char* delim) {
+    if (str) {
+        next_token = str;
+    }
+    if (!next_token) {
+        return NULL;
+    }
+    while (*next_token && strchr(delim, *next_token)) { // Skip leading delimiters
+        next_token++;
+    }
+    char* token_start = next_token; // first non-delimiter character
+    while (*next_token && !strchr(delim, *next_token)) {
+        next_token++;
+    }
+
+    if (*next_token) {
+        *next_token = '\0';
+        next_token++;
+    } else {
+        next_token = NULL;
+    }
+
+    return token_start;
+}
+
 uint16_t far_ptr_read(far_ptr p) {
     uint16_t ret;
     uint16_t seg = p.segment;
