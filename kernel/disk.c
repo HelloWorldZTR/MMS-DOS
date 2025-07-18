@@ -133,7 +133,7 @@ int read_root_entry(size_t disknum) {
 // first_cluster: the starting cluster number
 // Returns 0 if the read was successful, non-zero if there was an error
 // TODO: Add size constraint to prevent blowing up file buffer
-int read_fat_cls(far_ptr dest, size_t disknum, size_t first_cluster) {
+int read_fat_file(far_ptr dest, size_t disknum, size_t first_cluster) {
 
     size_t first_data_sector = fat_header.BPB_RsvdSecCnt + (fat_header.BPB_NumFATs * fat_header.BPB_FATSz16) + fat_header.BPB_RootEntCnt * sizeof(rootentry) / 512;
 

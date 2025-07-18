@@ -84,7 +84,7 @@ void cd(char *name) {
                     return;
                 }
                 if (strcmp(name, "..") == 0) { // Is upper directory
-                    int ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
+                    int ret = read_fat_file(root_entry_ptr, disknum, entry.DIR_FstClus);
                     if (!ret) { // Change directory successful
                         cwd_index--;
                     }
@@ -97,7 +97,7 @@ void cd(char *name) {
                     return; // Do nothing
                 }
                 else if (cwd_index < MAX_CWD_DEPTH - 1) { // Is normal directory
-                    int ret = read_fat_cls(root_entry_ptr, disknum, entry.DIR_FstClus);
+                    int ret = read_fat_file(root_entry_ptr, disknum, entry.DIR_FstClus);
                     if (!ret) { // Change directory successful
                         memcpy(cwd[cwd_index], name, 11);
                         cwd_index++;
@@ -164,7 +164,7 @@ void cat(char* name) {
         if (match) {
             if (!(entry.DIR_Attr & 0x10)) { // Is not a directory
                 // Read the file content to buffer
-                read_fat_cls(file_buffer_ptr, disknum, entry.DIR_FstClus);
+                read_fat_file(file_buffer_ptr, disknum, entry.DIR_FstClus);
                 // Print the file content
                 size_t file_size = entry.DIR_FileSize;
                 char temp_buffer[512];
@@ -208,13 +208,20 @@ void print_prompt() {
     putchar('>');
 }
 
+void echo(char* args) {
+    if (args) puts(args);
+    putchar('\n');
+}
+
 Command commands[] = {
     {"ls", ls},
     {"cd", cd},
     {"cls", cls},
     {"pwd", pwd},
     {"test", test_fn},
-    {"cat", cat}
+    {"cat", cat},
+    {"echo", echo},
+    {"exit", halt}
 };
 #define COMMAND_COUNT  (sizeof(commands) / sizeof(Command))
 
