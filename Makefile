@@ -43,9 +43,11 @@ kernel/%.o: kernel/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 entry_kernel.o: kernel/entry_kernel.S
 	$(AS) -c kernel/entry_kernel.S -o kernel/entry_kernel.o
+isr.o: kernel/isr.S
+	$(AS) -c kernel/isr.S -o kernel/isr.o
 
-KERNEL.SYS: $(KERNEL_OBJ_FILES) entry_kernel.o
-	$(LD) $(LDFLAGS) -T kernel/linker.ld -o fs/KERNEL.SYS kernel/entry_kernel.o $(KERNEL_OBJ_FILES)
+KERNEL.SYS: $(KERNEL_OBJ_FILES) entry_kernel.o isr.o
+	$(LD) $(LDFLAGS) -T kernel/linker.ld -o fs/KERNEL.SYS kernel/entry_kernel.o kernel/isr.o $(KERNEL_OBJ_FILES)
 
 #############################################
 # Piece together the system image
